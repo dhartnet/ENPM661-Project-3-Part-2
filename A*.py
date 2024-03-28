@@ -1,18 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def newNodes(nodeState, u1, u2): # (node, lower wheel velocity, higher wheel velocity)
-
-  # ur and ul are in radians per second
+def newNodes(nodeState, u1, u2): # (node, lower wheel velocity, higher wheel velocity) speeds in RPM
   
   # Extract node information from nodeState value
   node = tuple(nodeState)
   xi = node[0]/2
   yi = node[1]/2
   thetai = node[2]*30 # deg
-
-  #u1 = round(np.pi * u1 / 30.0, 0) # rad/s
-  #u2 = round(np.pi * u2 / 30.0, 0) # rad/s
 
   u1 = np.pi * u1 / 30
   u2 = np.pi * u2 / 30
@@ -49,13 +44,14 @@ def newNodes(nodeState, u1, u2): # (node, lower wheel velocity, higher wheel vel
     ang = round(30 * ang / np.pi, 2) # rpm
     t = 0
     c2c = np.sqrt((xi - x)**2 + (yi - y)**2) # cost to come is linear displacement, not calculating distance covered
-    newNodes.append(((round(x,2), round(y,2), round(theta,2)), round(c2c,2), (v, ang)))
+    newNodes.append(((round(x,2), round(y,2), round(theta,2)), round(c2c,2), (v, ang))) # outputs node, cost to come, and associated linear and ang velocity to get to each node (to be sent to robot)
 
   return newNodes
 
+### The below is for testing the newNode function ###
 node = (0, 0, 3)
 
-nodes = newNodes(node, 15, 30)
+nodes = newNodes(node, 15, 30) # (node, low speed (rpm), high speed (rpm))
 
 xpoints = np.zeros(8)
 ypoints = np.zeros(8)
