@@ -270,8 +270,8 @@ def obstacle_space():
 def newNodes(nodeState, clearance, radius, u1, u2): # (node, lower wheel velocity, higher wheel velocity) speeds in RPM
   # Extract node information from nodeState value
   node = tuple(nodeState)
-  xi = node[0]/2
-  yi = node[1]/2
+  xi = node[0]
+  yi = node[1]
   thetai = node[2]*30 # deg
 
   u1 = np.pi * u1 / 30
@@ -300,9 +300,9 @@ def newNodes(nodeState, clearance, radius, u1, u2): # (node, lower wheel velocit
     # we let each action run for one second, with a time step of 0.1 seconds for integration calculation
     while t <= 1.0:
       t = t + dt
-      theta = theta + (r/L) * (ur - ul) * dt
       x = x + (r/2) * (ul + ur) * np.cos(theta) * dt
       y = y + (r/2) * (ul + ur) * np.sin(theta) * dt
+      theta = theta + (r/L) * (ur - ul) * dt
 
     v = (r/2) * (ul + ur)
     ang = (r/L) * (ur - ul) # rad/s
@@ -311,9 +311,9 @@ def newNodes(nodeState, clearance, radius, u1, u2): # (node, lower wheel velocit
     c2c = np.sqrt((xi - x)**2 + (yi - y)**2) # cost to come is linear displacement, not calculating distance covered
     newX = int(round(x,0))
     newY = int(round(y,0))
-    new_theta = int((theta % 360)//30)  # Rounded theta for comparing nodes
-    if not (newX < clearance + radius or newX > 600 - clearance - radius or newY < clearance + radius or newY > 200 - clearance - radius):
-        newNodes.append(((newX, newY, new_theta), round(c2c,2), (v, ang))) # outputs node, cost to come, and associated linear and ang velocity to get to each node (to be sent to robot)
+    new_theta = int(((180 * theta / np.pi) % 360)//30)  # Rounded theta for comparing nodes
+    #if not (newX < clearance + radius or newX > 600 - clearance - radius or newY < clearance + radius or newY > 200 - clearance - radius):
+    newNodes.append(((newX, newY, new_theta), round(c2c,2), (v, ang))) # outputs node, cost to come, and associated linear and ang velocity to get to each node (to be sent to robot)
 
   return newNodes
 ###### End Move functions ######
@@ -347,7 +347,7 @@ def a_star_algorithm(start, goal, weight, rpm1, rpm2, clearance, radius):
         _, node_tuple = open_queue.get()
         node = node_tuple[0]
         visited_grid[node[0]][node[1]][node[2]] = True
-        visited_list.append(node)
+        visited_list.append(node_tuple)
 
         if inGoal(node, goal_node):
             return parent_grid, visited_list
@@ -372,13 +372,16 @@ def a_star_algorithm(start, goal, weight, rpm1, rpm2, clearance, radius):
 
 # Backtracking using path list created from visited/path dictionary
 def find_path(parent_grid, visited_list, start):
-    current_node = visited_list[-1]
-    path = [current_node]
+    node_tuple = visited_list[-1] #((x,y,theta),(),(v,ang))
+    current_node = node_tuple[0]
+    path = [node_tuple]
     start_node = start
     while start_node != current_node:
+        print('\n',current_node[0],'\n',current_node[1],'\n',current_node[2],'\n')
         temp_node = parent_grid[int(current_node[0])][int(current_node[1])][current_node[2]]
         current_node = temp_node
         path.insert(0, current_node)
+        current_node = current_node[0]
     return path
 
 #### Main ###
@@ -433,8 +436,8 @@ parent_grid = explored[0]
 visited_list = explored[1]
 
 # Needs Updating
-# print('Generating path...')
-# path = find_path(parent_grid, visited_list, start)
+print('Generating path...')
+path = find_path(parent_grid, visited_list, start_node)
 
 # Get time taken to find path
 tf = time.time()
