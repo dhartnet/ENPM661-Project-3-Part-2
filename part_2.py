@@ -474,6 +474,7 @@ rpm2 = (int(80))
 # rpm1 = int(input('Enter first RPM value: '))
 # rpm2 = int(input('Enter second RPM value: '))
 
+
 # Start timer
 ti = time.time()
 
@@ -502,6 +503,10 @@ video_output = cv2.VideoWriter('a_star_output.mp4', v_writer, fps, (visX, visY))
 
 obstacles = obstacle_space()
 draw_obstacles(canvas, obstacles, video_output)
+
+draw_nodes(canvas, start_node, goal_node)
+
+draw_explored(canvas, visited_list, video_output, rpm1, rpm2)
 
 draw_nodes(canvas, start_node, goal_node)
 
