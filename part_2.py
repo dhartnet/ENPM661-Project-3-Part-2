@@ -73,7 +73,7 @@ def inObstacle(maybeNode, clearance, radius):
     r = 60 # radius of circle obstacle
 
     # check if in map
-    if xnode < clearance + radius or xnode > 600 - clearance - radius or ynode < clearance + radius or ynode > 200 - clearance - radius:
+    if xnode < clearance + radius or xnode > spaceX - clearance - radius or ynode < clearance + radius or ynode > spaceY - clearance - radius:
         vibes = True
 
     # check first obstacle (rectangle)
@@ -112,19 +112,19 @@ def getRecPoints(currentNode):
 
   # top right
   x1 = xc + s*(np.cos(theta) - np.sin(theta))
-  y1 = 200 - yc + s*(np.sin(theta) + np.cos(theta))
+  y1 = visY - yc + s*(np.sin(theta) + np.cos(theta))
 
   # top left
   x2 = xc + s*(-np.cos(theta) - np.sin(theta))
-  y2 = 200 - yc + s*(-np.sin(theta) + np.cos(theta))
+  y2 = visY - yc + s*(-np.sin(theta) + np.cos(theta))
 
   # bottom left
   x3 = xc + s*(-np.cos(theta) + np.sin(theta))
-  y3 = 200 - yc + s*(-np.sin(theta) - np.cos(theta))
+  y3 = visY - yc + s*(-np.sin(theta) - np.cos(theta))
 
   # bottom right
   x4 = xc + s*(np.cos(theta) + np.sin(theta))
-  y4 = 200 - yc + s*(np.sin(theta) - np.cos(theta))
+  y4 = visY - yc + s*(np.sin(theta) - np.cos(theta))
 
   coords = np.array([[x1, y1], [x2, y2], [x3, y3], [x4, y4]])
 
@@ -132,35 +132,47 @@ def getRecPoints(currentNode):
 
 # Draws start node and end node
 def draw_nodes(canvas, start_node, goal_node):
-    cv2.rectangle(canvas, (10*start_node[0] - 10, 2000 - 10*start_node[1] - 10), (10*start_node[0] + 10, 2000 - 10*start_node[1] + 10), color=(0, 250, 0), thickness=cv2.FILLED)
-    cv2.rectangle(canvas, (10*goal_node[0] - 10, 2000 - 10*goal_node[1] - 10), (10*goal_node[0] + 10, 2000 - 10*goal_node[1] + 10), color=(0, 0, 255), thickness=cv2.FILLED)
+    cv2.rectangle(canvas, (conversion * start_node[0] - 10, visY - conversion * start_node[1] - 10), (conversion * start_node[0] + 10, visY - conversion * start_node[1] + 10), color=(0, 250, 0), thickness=cv2.FILLED)
+    cv2.rectangle(canvas, (conversion * goal_node[0] - 10, visY - conversion * goal_node[1] - 10), (conversion * goal_node[0] + 10, visY - conversion * goal_node[1] + 10), color=(0, 0, 255), thickness=cv2.FILLED)
+
+# Creates a list of the obstacles in the workspace
+def obstacle_space():
+    obstacle_list = []
+
+    obstacle_list.append(((0,0),(visX,visY)))
+    obstacle_list.append(((1500,2000),(1750,1000)))
+    obstacle_list.append(((2500,0),(2750,1000)))
+    obstacle_list.append((4200,1200,600))
+
+    return obstacle_list
 
 # Populates the canvas with the obstacles
 def draw_obstacles(canvas, obstacles, video_output):
-    for obstacle in obstacles:       
-        if len(obstacle) == 2 and obstacle != ((0,0),(6000,2000)):
+    for obstacle in obstacles:      
+        if len(obstacle) == 2 and obstacle != ((0,0),(visX,visY)):
             start_x = obstacle[0][0]
             # Invert y-value
-            start_y = 2000 - obstacle[0][1]
+            start_y = visY - obstacle[0][1]
             end_x = obstacle[1][0]
             # Invert y-value
-            end_y = 2000 - obstacle[1][1]
-            start_coordinate = 10*(start_x, start_y)
-            end_coordinate = 10*(end_x, end_y)
+            end_y = visY - obstacle[1][1]
+            start_coordinate = (start_x, start_y)
+            end_coordinate = (end_x, end_y)
             cv2.rectangle(canvas, pt1=start_coordinate, pt2=end_coordinate, color=(0, 0, 0), thickness=-1)
         elif len(obstacle) == 3:
-            cv2.circle(canvas,(obstacle[0],2000-obstacle[1]), obstacle[2], (0,0,0), -1)
-    cv2.imshow('A*', canvas)
-    video_output.write(canvas)
-    cv2.waitKey(2000)
+            cv2.circle(canvas,(obstacle[0],visY-obstacle[1]), obstacle[2], (0,0,0), -1)
+    canvas1 = cv2.resize(canvas, (resizeX, resizeY))            
+    cv2.imshow('A*', canvas1)
+    video_output.write(canvas1)
+    cv2.waitKey(100)
     return
 
 # Populates and updates the canvas with explored nodes
 def draw_explored(canvas, points, video_output, u1, u2):
     count = 0
     t = 0 # start time
-    r =  3.3 # wheel radius cm
-    L =  28.7 # robot diameter cm
+    r =  3.3 * conversion # wheel radius cm
+    L =  28.7 * conversion # robot diameter cm
     dt = 0.1 # time step for plotting
 
     u1 = np.pi * u1 / 30
@@ -169,14 +181,14 @@ def draw_explored(canvas, points, video_output, u1, u2):
     actions = [[0, u1], [u1, 0], [u1, u1], [0, u2], [u2, 0], [u2, u2], [u1, u2], [u2, u1]]
 
     # Start from the second point
-    for i in range(1, len(points)): 
+    for i in range(0, len(points)-1): 
         point = points[i]
             
         current_node = point[0]
 
         for action in actions:
-            x = int(current_node[0])
-            y = int(current_node[1])
+            x = int(conversion * current_node[0])
+            y = int(conversion * current_node[1])
             theta = np.pi * current_node[2] * 30 / 180 # orientation in radians  
             t = 0
             ul = action[0] # left wheel vel
@@ -189,15 +201,15 @@ def draw_explored(canvas, points, video_output, u1, u2):
                 x += int((r/2) * (ul + ur) * np.cos(theta) * dt)
                 y += int((r/2) * (ul + ur) * np.sin(theta) * dt)
                 theta += (r/L) * (ur - ul) * dt
-                cv2.line(canvas, (xs, 200 - ys), (x, 200 - y), (255,0,0), 1) # image, point 1, point 2, color, thickness
+                cv2.line(canvas, (xs, visY - ys), (x, visY - y), (255,0,0), conversion) # image, point 1, point 2, color, thickness
 
         count += 1
-        if count % 50 == 0:
-            count = 0
-            canvas1 = cv2.resize(canvas, (1200, 400))            
+        if count % 5000 == 0:
+            count = 0          
+            canvas1 = cv2.resize(canvas, (resizeX, resizeY))            
             cv2.imshow('A*', canvas1)
-            cv2.waitKey(10)
-            video_output.write(canvas)
+            video_output.write(canvas1)
+            cv2.waitKey(1000//30)
     return
 
 # Populates and updates the canvas with path nodes
@@ -206,21 +218,21 @@ def draw_path(canvas, path, video_output, u1, u2):
     u1 = np.pi * u1 / 30
     u2 = np.pi * u2 / 30
     t = 0 # start time
-    r =  3.3 # wheel radius cm
-    L =  28.7 # robot diameter cm
+    r =  3.3  * conversion # wheel radius cm
+    L =  28.7  * conversion # robot diameter cm
     dt = 0.1 # time step for plotting
 
     actions = [[0, u1], [u1, 0], [u1, u1], [0, u2], [u2, 0], [u2, u2], [u1, u2], [u2, u1]]
 
-    for i in range(1, len(path)-1): 
+    for i in range(0, len(path)-1): 
 
         point = path[i]
             
         current_node = point[0]
 
         for action in actions:
-            x = int(current_node[0])
-            y = int(current_node[1])
+            x = int(conversion * current_node[0])
+            y = int(conversion * current_node[1])
             theta = np.pi * current_node[2] * 30 / 180 # orientation in radians  
             t = 0
             ul = action[0] # left wheel vel
@@ -234,21 +246,17 @@ def draw_path(canvas, path, video_output, u1, u2):
                 y = y + int((r/2) * (ul + ur) * np.sin(theta) * dt)
 
                 theta = theta + (r/L) * (ur - ul) * dt
-                cv2.line(canvas, (xs, 200 - ys), (x, 200 - y), (0,0,255), 1) # image, point 1, point 2, color, thickness
+                cv2.line(canvas, (xs, visY - ys), (x, visY - y), (0,0,255), conversion) # image, point 1, point 2, color, thickness
 
         count += 1
         if count % 1 == 0:
-            count = 0
-            canvas1 = cv2.resize(canvas, (1200, 400))            
+            count = 0           
+            canvas1 = cv2.resize(canvas, (resizeX, resizeY))            
             cv2.imshow('A*', canvas1)
             video_output.write(canvas1)
-            # video_output.write(canvas1)
-            # video_output.write(canvas1)
-            # video_output.write(canvas1)
-            cv2.waitKey(int(1000 / 20))
+            cv2.waitKey(1000//10)
 
-    cv2.waitKey(int(4000))
-
+    cv2.waitKey(1) # video close time in ms
     return
 
 # Adds seconds at end of video
@@ -263,31 +271,20 @@ def record_animation(obstacles, explored, path, start_node, goal_node):
     # Initialize VideoWriter
     v_writer = cv2.VideoWriter_fourcc(*'mp4v')
     fps = 60
-    video_output = cv2.VideoWriter('a_star_output.mp4', v_writer, fps, (1200, 500))
+    video_output = cv2.VideoWriter('a_star_output.mp4', v_writer, fps, (visX, visY))
 
-    canvas = np.ones((200, 600, 3), dtype=np.uint8) * 255  # White canvas
+    canvas = np.ones((visY, visX, 3), dtype=np.uint8) * 255  # White canvas
     
     draw_nodes(canvas, start_node, goal_node)
     draw_obstacles(canvas, obstacles, video_output)
     add_blank_frames(canvas, video_output, fps, 2)    
-    draw_explored(canvas, explored, step, video_output)
+    draw_explored(canvas, explored, video_output)
     draw_nodes(canvas, start_node, goal_node)
-    draw_path(canvas,path, step, video_output)
+    draw_path(canvas,path, video_output)
     cv2.waitKey(3000)
     add_blank_frames(canvas, video_output, fps, 2)
     video_output.release()
     return
-
-# Creates a list of the obstacles in the workspace
-def obstacle_space():
-    obstacle_list = []
-
-    obstacle_list.append(((0,0),(600,200)))
-    obstacle_list.append(((150,200),(175,100)))
-    obstacle_list.append(((250,0),(275,100)))
-    obstacle_list.append((420,120,60))
-
-    return obstacle_list
 
 ###### Move functions ######
 def newNodes(nodeState, clearance, radius, u1, u2): # (node, lower wheel velocity, higher wheel velocity) speeds in RPM
@@ -297,7 +294,7 @@ def newNodes(nodeState, clearance, radius, u1, u2): # (node, lower wheel velocit
   yi = node[1]
   thetai = node[2]*30 # deg
 
-  u1 = np.pi * u1 / 30
+  u1 = np.pi * u1 / 30 # (rad/s)
   u2 = np.pi * u2 / 30
 
   # Define action set from wheel rotational velocities
@@ -327,21 +324,26 @@ def newNodes(nodeState, clearance, radius, u1, u2): # (node, lower wheel velocit
       y = y + (r/2) * (ul + ur) * np.sin(theta) * dt
       theta = theta + (r/L) * (ur - ul) * dt
 
-    v = round((r/2) * (ul + ur), 2)
-    ang = (r/L) * (ur - ul) # rad/s
-    ang = round(30 * ang / np.pi, 2) # rpm
     t = 0
     c2c = np.sqrt((xi - x)**2 + (yi - y)**2) # cost to come is linear displacement, not calculating distance 
     newX = int(round(x,0))
     newY = int(round(y,0))
 
-    new_theta = 180 * theta / np.pi
+    new_theta = 180 * theta / np.pi #deg
     if new_theta < 0:
       new_theta = 360 + new_theta
     new_theta = int((round(new_theta, 0) % 360)/30) # Rounded theta for comparing nodes
-    if not (newX < clearance + radius or newX > 600 - clearance - radius or newY < clearance + radius or newY > 200 - clearance - radius):
-      newNodes.append(((newX, newY, new_theta), round(c2c,2), (v, ang))) # outputs node, cost to come, and associated linear and ang velocity to get to each node (to be sent to robot)
-      print((newX, newY, new_theta), '\n')
+
+    # v = round((r/2) * (ul + ur), 2)
+    # ang = (r/L) * (ur - ul)
+    # ang = round(ang, 2) # rpm
+
+    v = (r/2) * (ul + ur)
+    ang = (r/L) * (ur - ul)
+
+    if not (newX < clearance + radius or newX > spaceX - clearance - radius or newY < clearance + radius or newY > spaceY - clearance - radius):
+      newNodes.append(((newX, newY, new_theta), round(c2c), (v, ang))) # outputs node, cost to come, and associated linear and ang velocity to get to each node (to be sent to robot)
+      #print((newX, newY, new_theta), '\n')
 
   return newNodes
 ###### End Move functions ######
@@ -355,15 +357,15 @@ def a_star_algorithm(start, goal, weight, rpm1, rpm2, clearance, radius):
     goal_node = (int(goal[0]), int(goal[1]), goal[2])
 
     # Create cost_grid and initialize cost to come for start_node
-    cost_grid = [[[float('inf')] * 12 for _ in range(200)] for _ in range(600)]
+    cost_grid = [[[float('inf')] * 12 for _ in range(spaceY)] for _ in range(spaceX)]
     cost_grid[start_node[0]][start_node[1]][start_node[2]] = 0
 
     # Create grid to store parents
-    parent_grid = [[[None] * 12 for _ in range(200)] for _ in range(600)]
+    parent_grid = [[[None] * 12 for _ in range(spaceY)] for _ in range(spaceX)]
     parent_grid[start_node[0]][start_node[1]][start_node[2]] = None
 
     # Create grid to store parents
-    visited_grid = [[[False] * 12 for _ in range(200)] for _ in range(600)]
+    visited_grid = [[[False] * 12 for _ in range(spaceY)] for _ in range(spaceX)]
     visited_list = []
 
     # Priority queue to store open nodes
@@ -413,6 +415,21 @@ def find_path(parent_grid, visited_list, start):
     return path
 
 #### Main ###
+# Grid Variables
+spaceX = 600
+spaceY = 200
+
+# Visualization variables
+visX = 6000
+visY = 2000
+
+conversion = visX//spaceX
+
+# Resized canvas
+resizeX = 1200
+resizeY = 400
+thickness = conversion
+
 # Get obstacle coordinates
 obstacles = obstacle_space()
 weight = 1 # option for weighted A*
@@ -420,12 +437,17 @@ weight = 1 # option for weighted A*
 clearance = 2 # cm
 radius = 22 # cm
 
-# Get and verify input coordinates
+start_node = tuple((100, 100, 0))
+goal_node = tuple((420, 40, 0))
+rpm1 = (int(40))
+rpm2 = (int(80))
+
+#Get and verify input coordinates
 # xs = int(input('Enter x coordinate value for start coordinate: '))
 # ys = int(input('Enter y coordinate value for start coordinate: '))
 # thetas = int(input('Enter theta value for start coordinate: '))//30
 # start_node = tuple((xs, ys, thetas))
-# while inObstacle(start_node, clearance):
+# while inObstacle(start_node, clearance, radius):
 #     print('Node outside workspace or in obstacle. Choose new start location')
 #     xs = int(input('Enter x coordinate value for start location: '))
 #     ys = int(input('Enter y coordinate value for start location: '))
@@ -433,30 +455,24 @@ radius = 22 # cm
 #     start_node = tuple((xs, ys, thetas))
 # start_node = tuple((xs, ys, thetas)) # cm
 
-# # Get and verify input coordinates
+# Get and verify input coordinates
 # xg = int(input('Enter x coordinate value for goal coordinate: '))
 # yg = int(input('Enter y coordinate value for goal coordinate: '))
-# goal_node = tuple((xg, yg)) # cm
-# while inObstacle(goal_node, clearance):
+# thetag = int(input('Enter theta value for goal coordinate (must be multiple of 30 degrees): '))//30
+# goal_node = tuple((xg, yg, thetag)) # cm
+# while inObstacle(goal_node, clearance, radius):
 #     print('Node outside workspace or in obstacle. Choose new goal location')
 #     xg = int(input('Enter x coordinate value for goal location: '))
 #     yg = int(input('Enter y coordinate value for goal location: '))
-#     goal_node = tuple((xg, yg)) # cm
-# goal_node = tuple((xg, yg)) # cm
+#     thetag = int(input('Enter theta value for goal coordinate (must be multiple of 30 degrees): '))//30
+#     goal_node = tuple((xg, yg, thetag)) # cm
+# goal_node = tuple((xg, yg, thetag)) # cm
 
 # start = (int(start_node[0]), int(start_node[1]), start_node[2]) # cm
 # goal = (int(goal_node[0]), int(goal_node[1]), goal_node[2]) # cm
 
-#rpm1 = int(input('Enter first RPM value: '))
-#rpm2 = int(input('Enter second RPM value: '))
-
-start_node = (50, 100, 0)
-goal_node = (100, 150, 0)
-rpm1 = (int(25))
-rpm2 = (int(50))
-
-u1 = np.pi * rpm1 / 30
-u2 = np.pi * rpm2 / 30
+# rpm1 = int(input('Enter first RPM value: '))
+# rpm2 = int(input('Enter second RPM value: '))
 
 # Start timer
 ti = time.time()
@@ -469,6 +485,7 @@ visited_list = explored[1]
 # Needs Updating
 print('Generating path...')
 path = find_path(parent_grid, visited_list, start_node)
+print(path)
 
 # Get time taken to find path
 tf = time.time()
@@ -476,21 +493,21 @@ print('Path found in: ', tf-ti)
 # print(path)
 
 # Initialize Canvas
-canvas = np.ones((2000, 6000, 3), dtype=np.uint8) * 255  # White canvas
+canvas = np.ones((visY, visX, 3), dtype=np.uint8) * 255  # White canvas
 
 # Initialize VideoWriter
 v_writer = cv2.VideoWriter_fourcc(*'mp4v')
 fps = 60
-video_output = cv2.VideoWriter('a_star_output.mp4', v_writer, fps, (1200, 500))
-
-draw_nodes(canvas, start_node, goal_node)
+video_output = cv2.VideoWriter('a_star_output.mp4', v_writer, fps, (visX, visY))
 
 obstacles = obstacle_space()
 draw_obstacles(canvas, obstacles, video_output)
 
-draw_explored(canvas, visited_list, video_output, rpm1, rpm2)
-
 draw_nodes(canvas, start_node, goal_node)
+
+#draw_explored(canvas, visited_list, video_output, rpm1, rpm2)
+
+#draw_nodes(canvas, start_node, goal_node)
 
 draw_path(canvas, path, video_output, rpm1, rpm2)
 
