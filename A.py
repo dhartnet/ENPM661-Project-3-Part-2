@@ -151,6 +151,9 @@ def draw_explored(canvas, points, video_output, u1, u2):
 
     # Start from the second point
     for i in range(0, len(points)-1): 
+
+        if i == len(points) - 5:
+          break
         point = points[i]
             
         current_node = point[0]
@@ -164,6 +167,7 @@ def draw_explored(canvas, points, video_output, u1, u2):
             ur = action[1] # right wheel vel
             
             while t <= 1.0:
+                count += 1
                 if inObstacle((x//conversion, y//conversion), clearance, radius):
                     break
                 t = t + dt
@@ -174,7 +178,7 @@ def draw_explored(canvas, points, video_output, u1, u2):
                 theta += (r/L) * (ur - ul) * dt
                 cv2.line(canvas, (xs, visY - ys), (x, visY - y), (255,0,0), conversion) # image, point 1, point 2, color, thickness
 
-            count += 1
+            # count += 1
 
         if count % 3000 == 0:
             count = 0          
@@ -272,12 +276,7 @@ def newNodes(nodeState, clearance, radius, u1, u2): # (node, lower wheel velocit
   raw_node = tuple(nodeState[3])
   xi = node[0]
   yi = node[1]
-  #thetai = node[2]*30 # deg
-
-  #xi = raw_node[0]
-  #yi = raw_node[1]
-  thetai = raw_node[2]
-
+  thetai = node[2]*30 # deg
 
   # xi = raw_node[0]
   # yi = raw_node[1]
@@ -434,35 +433,27 @@ clearance = 2 # cm
 radius = 22 # cm
 
 start_node = tuple((100, 100, 0))
-goal_node = tuple((575, 100, 0))
+# goal_node = tuple((575, 100, 0))
 rpm1 = (int(40))
 rpm2 = (int(80))
 
-#Get and verify input coordinates
-# xs = int(input('Enter x coordinate value for start coordinate: '))
-# ys = int(input('Enter y coordinate value for start coordinate: '))
-# thetas = int(input('Enter theta value for start coordinate: '))//30
-# start_node = tuple((xs, ys, thetas))
-# while inObstacle(start_node, clearance, radius):
-#     print('Node outside workspace or in obstacle. Choose new start location')
-#     xs = int(input('Enter x coordinate value for start location: '))
-#     ys = int(input('Enter y coordinate value for start location: '))
-#     thetas = int(input('Enter theta value for start coordinate (must be multiple of 30 degrees): '))//30     
-#     start_node = tuple((xs, ys, thetas))
-# start_node = tuple((xs, ys, thetas)) # cm
+print('Start Node is (100, 100, 0) (centimeters)', '\n')
+print('Wheel speeds are 40 and 80 rpm)', '\n')
 
 # Get and verify input coordinates
-# xg = int(input('Enter x coordinate value for goal coordinate: '))
-# yg = int(input('Enter y coordinate value for goal coordinate: '))
-# thetag = int(input('Enter theta value for goal coordinate (must be multiple of 30 degrees): '))//30
-# goal_node = tuple((xg, yg, thetag)) # cm
-# while inObstacle(goal_node, clearance, radius):
-#     print('Node outside workspace or in obstacle. Choose new goal location')
-#     xg = int(input('Enter x coordinate value for goal location: '))
-#     yg = int(input('Enter y coordinate value for goal location: '))
-#     thetag = int(input('Enter theta value for goal coordinate (must be multiple of 30 degrees): '))//30
-#     goal_node = tuple((xg, yg, thetag)) # cm
-# goal_node = tuple((xg, yg, thetag)) # cm
+xg = int(input('Enter x coordinate value for goal coordinate in centimeters: '))
+yg = int(input('Enter y coordinate value for goal coordinate in centimeters: '))
+thetag = int(0)//30
+goal_node = tuple((xg, yg, thetag)) # cm
+while inObstacle(goal_node, clearance, radius):
+    print('Node outside workspace or in obstacle. Choose new goal location')
+    xg = int(input('Enter x coordinate value for goal location in centimeters: '))
+    yg = int(input('Enter y coordinate value for goal location in centimeters: '))
+    thetag = int(0)//30
+    goal_node = tuple((xg, yg, thetag)) # cm
+goal_node = tuple((xg, yg, thetag)) # cm
+
+print('Goal Node is ', goal_node, ' in centimeters', '\n')
 
 # start = (int(start_node[0]), int(start_node[1]), start_node[2]) # cm
 # goal = (int(goal_node[0]), int(goal_node[1]), goal_node[2]) # cm
@@ -482,38 +473,38 @@ visited_list = explored[1]
 # Needs Updating
 print('Generating path...')
 path = find_path(parent_grid, visited_list, start_node)
-print(path)
+# print(path)
 
 # Get time taken to find path
 tf = time.time()
 print('Path found in: ', tf-ti)
 # print(path)
 
-## Initialize Canvas
-# canvas = np.ones((visY, visX, 3), dtype=np.uint8) * 255  # White canvas
+# ## Initialize Canvas
+canvas = np.ones((visY, visX, 3), dtype=np.uint8) * 255  # White canvas
 
-# v_writer = cv2.VideoWriter_fourcc(*'mp4v')
-# fps = 60
-# video_output = cv2.VideoWriter('a_star_output.mp4', v_writer, fps, (resizeX, resizeY))
+v_writer = cv2.VideoWriter_fourcc(*'mp4v')
+fps = 60
+video_output = cv2.VideoWriter('a_star_output.mp4', v_writer, fps, (resizeX, resizeY))
 
-# obstacles = obstacle_space()
-# draw_obstacles(canvas, obstacles, video_output)
+obstacles = obstacle_space()
+draw_obstacles(canvas, obstacles, video_output)
 
-# draw_nodes(canvas, start_node, goal_node)
+draw_nodes(canvas, start_node, goal_node)
 
-# draw_explored(canvas, visited_list, video_output, rpm1, rpm2)
+draw_explored(canvas, visited_list, video_output, rpm1, rpm2)
 
-# draw_nodes(canvas, start_node, goal_node)
+draw_nodes(canvas, start_node, goal_node)
 
-# draw_explored(canvas, visited_list, video_output, rpm1, rpm2)
+draw_explored(canvas, visited_list, video_output, rpm1, rpm2)
 
-# draw_nodes(canvas, start_node, goal_node)
+draw_nodes(canvas, start_node, goal_node)
 
-# print('drawing_path')
-# draw_path(canvas, path, video_output)
+print('drawing_path')
+draw_path(canvas, path, video_output)
 
-# add_blank_frames(canvas, video_output, fps, 2)
-# video_output.release()
+add_blank_frames(canvas, video_output, fps, 2)
+video_output.release()
 
 # # Needs Updating
 # record_animation(obstacles, visited_list, path, start, goal)

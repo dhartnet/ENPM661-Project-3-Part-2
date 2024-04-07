@@ -1,4 +1,4 @@
-from part_2 import *
+from A import *
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
@@ -12,7 +12,7 @@ class rosControlNode(Node):
     def robotControl(self, path):
       i = 0
 
-      cl = 1.0 # lin gain
+      cl = 0.995 # lin gain
       ca = 0.9 # ang gain
       t = 1.55
       velocity_message = Twist()
@@ -27,19 +27,18 @@ class rosControlNode(Node):
         self.ts =  time.time() #start time
         self.tc = time.time() # current time
 
-        while self.tc - self.ts <= 3.0:
-          
-          self.tc = time.time()
-
         # Publish the twist message
         if self.ang > 0.9:
           self.ang = 0.4
         if self.ang < -0.9:
           self.ang = -0.4
 
-        if self.x > 330:
-          self.ang = self.ang * 0.5
-          self.lin = self.lin * 0.5
+        if self.x > 340 and self.x < 400:
+          self.ang = self.ang * 0.7
+          self.lin = self.lin * 0.275
+
+        if self.x > 400:
+          self.lin = self.lin * 0.925
 
         velocity_message.linear.x = cl*float(self.lin) # m/s
         velocity_message.angular.z = ca*float(self.ang) # rad/s
