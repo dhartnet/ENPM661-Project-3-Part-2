@@ -272,7 +272,12 @@ def newNodes(nodeState, clearance, radius, u1, u2): # (node, lower wheel velocit
   raw_node = tuple(nodeState[3])
   xi = node[0]
   yi = node[1]
-  thetai = node[2]*30 # deg
+  #thetai = node[2]*30 # deg
+
+  #xi = raw_node[0]
+  #yi = raw_node[1]
+  thetai = raw_node[2]
+
 
   # xi = raw_node[0]
   # yi = raw_node[1]
