@@ -38,7 +38,8 @@ rclpy: For gazebo implementation
 # Output
 A video file called a_star_output.mp4 will be generated in the same directory were the code is ran from after it is done running.
 
-A video file showing our gazebo implementation is also in the Git repository
+A video file showing our gazebo implementation are in the following google drive folder and in the Git repository
+https://drive.google.com/drive/folders/1C94iOVgEsiReOIYn9gn1Z_hnCKDnO6l6?usp=drive_link 
 
 # Github Repository: 
 https://github.com/dhartnet/ENPM661-Project-3-Part-2 
