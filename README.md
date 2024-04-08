@@ -8,17 +8,17 @@ Project 3 Part 2 of ENPM-661 Planning For Autonomous Robots Course
 Implementation of the A* Algorithm for a Point Robot with ROS/Gazebo Simulation
 
 # How to Run
-Create a ros environment on your computer following the instructions provided to us here: https://github.com/shantanuparabumd/turtlebot3_project3
+Download the ros package to a location in your computer
 
-Save and move both "A_star.py" and "A_star_ros.py" to the ros environment and save them in the "scripts" folder
+In the terminal navigate to where the ros package is saved and then navigate to <project3_ws/src/turtlebot3_project3/scripts>
 
-Open the competition world with the robot spawned
+Build your package and launch "ros2 launch turtlebot3_project3 competition_world.launch.py"
 
-Open both "A_star.py" and "A_star_ros.py"
-
-Run the "A_star_ros.py" program by opening it in an IDE. Ensure "A_star.py" is also opened so it can run simultaneously. 
+Run "python3 A_ros.py" in a new terminal, but ensure you are also in the <project3_ws/src/turtlebot3_project3/scripts> location
 
 Enter the goal coordinates as prompted. The code will check that the provided coordinates are within the workspace and not inside any obstacles.
+
+To enter the goal coordinates, just enter a goal location with the units in centimeters. The x-coordinate will be prompted first, then the y-coordinate.
 
 # Dependencies
 The following Python libraries are used:
@@ -38,8 +38,9 @@ rclpy: For gazebo implementation
 # Output
 A video file called a_star_output.mp4 will be generated in the same directory were the code is ran from after it is done running.
 
-A video file showing our gazebo implementation are in the following google drive folder and in the Git repository
-https://drive.google.com/drive/folders/1C94iOVgEsiReOIYn9gn1Z_hnCKDnO6l6?usp=drive_link 
+A video file showing our gazebo implementation is also in the Git repository
+
+The following link also contains both videos in a Google Drive: https://drive.google.com/drive/folders/1C94iOVgEsiReOIYn9gn1Z_hnCKDnO6l6?usp=drive_link
 
 # Github Repository: 
 https://github.com/dhartnet/ENPM661-Project-3-Part-2 
